@@ -1,5 +1,12 @@
 use std::ops;
-use std::ops::{Neg, Index, Mul, Div};
+use std::ops::{Div, Index, Mul, Neg};
+
+use crate::util;
+use crate::util::random;
+
+pub const BLACK: Color = Color { e: [0.0, 0.0, 0.0] };
+pub const WHITE: Color = Color { e: [1.0, 1.0, 1.0] };
+pub const LIGHT_BLUE: Color = Color { e: [0.5, 0.7, 1.0] };
 
 #[derive(Debug, Default, Copy, Clone)]
 pub struct Vec3 {
@@ -49,6 +56,37 @@ impl Vec3 {
 
     pub fn unit(&self) -> Vec3 {
         *self / self.length()
+    }
+
+    pub fn random() -> Vec3 {
+        Vec3::new(util::random(), util::random(), util::random())
+    }
+
+    pub fn random_between(min: f64, max: f64) -> Vec3 {
+        Vec3::new(util::random_between(min, max), util::random_between(min, max), util::random_between(min, max))
+    }
+
+    pub fn random_in_unit_sphere() -> Vec3 {
+        loop {
+            let p = Vec3::random_between(-1.0, 1.0);
+            if p.length_squared() >= 1.0 {
+                continue;
+            }
+            return p;
+        }
+    }
+
+    pub fn random_unit_vector() -> Vec3 {
+        Vec3::random_in_unit_sphere().unit()
+    }
+
+    pub fn random_in_hemisphere(normal: &Vec3) -> Vec3 {
+        let in_unit_sphere = Vec3::random_in_unit_sphere();
+        if in_unit_sphere.dot(*normal) > 0.0 { // In the same hemisphere as the normal
+            in_unit_sphere
+        } else {
+            -in_unit_sphere
+        }
     }
 }
 

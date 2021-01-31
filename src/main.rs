@@ -1,3 +1,12 @@
+use crate::camera::Camera;
+use crate::color::write_color;
+use crate::hittable::{HitRecord, Hittable};
+use crate::hittable_list::*;
+use crate::ray::*;
+use crate::sphere::Sphere;
+use crate::util::random;
+use crate::vec3::*;
+
 mod vec3;
 mod ray;
 mod hittable;
@@ -7,25 +16,21 @@ mod util;
 mod camera;
 mod color;
 
-use crate::vec3::*;
-use crate::ray::*;
-use crate::hittable_list::*;
-use crate::sphere::Sphere;
-use crate::hittable::{Hittable, HitRecord};
-use crate::color::write_color;
-use crate::camera::Camera;
-use crate::util::random;
-
-fn ray_color(r: &Ray, world: &dyn Hittable) -> Color {
+fn ray_color(r: &Ray, world: &dyn Hittable, depth: i32) -> Color {
+    if depth <= 0 {
+        return BLACK;
+    }
 
     let mut rec = HitRecord::new();
 
-    if world.hit(r, 0.0, f64::MAX, &mut rec) {
-        return (rec.normal + Color::new(1.0,1.0,1.0)) * 0.5;
+    if world.hit(r, 0.001, f64::MAX, &mut rec) {
+        let target = rec.p + rec.normal + Vec3::random_unit_vector();
+        let bounce_ray = Ray::new(rec.p, target - rec.p);
+        return ray_color(&bounce_ray, world, depth - 1) * 0.5;
     }
     let unit_direction = r.direction().unit();
     let t = 0.5 * (unit_direction.y() + 1.0);
-    Color::new(1.0, 1.0, 1.0) * (1.0 - t) + Color::new(0.5, 0.7, 1.0) * t
+    WHITE * (1.0 - t) + LIGHT_BLUE * t
 }
 
 fn main() {
@@ -35,6 +40,7 @@ fn main() {
     let image_width: i32 = 400;
     let image_height: i32 = (image_width as f64 / aspect_ratio) as i32;
     let samples_per_pixel = 100;
+    let max_depth = 50;
 
     // World
     let mut world = HittableList::new();
@@ -56,7 +62,7 @@ fn main() {
                 let u = (i as f64 + random()) / (image_width - 1) as f64;
                 let v = (j as f64 + random()) / (image_height - 1) as f64;
                 let r = cam.get_ray(u, v);
-                pixel_color += ray_color(&r, &world)
+                pixel_color += ray_color(&r, &world, max_depth)
             }
             write_color(&pixel_color, samples_per_pixel);
         }
