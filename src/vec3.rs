@@ -58,6 +58,16 @@ impl Vec3 {
         *self / self.length()
     }
 
+    pub fn near_zero(&self) -> bool {
+        // Return true if the vector is close to zero in all dimensions.
+        let s = 1e-8;
+        (f64::abs(self.e[0]) < s) && (f64::abs(self.e[1]) < s) && (f64::abs(self.e[2]) < s)
+    }
+
+    pub fn reflect(&self, n: &Vec3) -> Vec3 {
+        return *self - *n * self.dot(*n) * 2.0;
+    }
+
     pub fn random() -> Vec3 {
         Vec3::new(util::random(), util::random(), util::random())
     }
