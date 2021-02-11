@@ -1,7 +1,9 @@
+use std::f64::consts::PI;
 use std::sync::Arc;
 
 use crate::camera::Camera;
 use crate::color::write_color;
+use crate::dielectric::Dielectric;
 use crate::hittable::{HitRecord, Hittable};
 use crate::hittable_list::*;
 use crate::lambertian::Lambertian;
@@ -11,7 +13,6 @@ use crate::ray::*;
 use crate::sphere::Sphere;
 use crate::util::random;
 use crate::vec3::*;
-use crate::dielectric::Dielectric;
 
 mod vec3;
 mod ray;
@@ -92,7 +93,21 @@ fn main() {
     world.add(sphere);
 
     // Camera
-    let cam = Camera::new();
+    let lookfrom = Vec3::new(3.0, 3.0, 2.0);
+    let lookat = Vec3::new(0.0, 0.0, -1.0);
+    let vup = Vec3::new(0.0, 1.0, 0.0);
+    let dist_to_focus = (lookfrom - lookat).length();
+    let aperture = 2.0;
+
+    let cam = Camera::new(
+        lookfrom,
+        lookat,
+        vup,
+        20.0,
+        aspect_ratio,
+        aperture,
+        dist_to_focus
+    );
 
     // Render
 
