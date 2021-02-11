@@ -13,7 +13,7 @@ pub struct HitRecord {
 
 impl HitRecord {
 
-    pub fn new(p: Point3, normal: Vec3, t: f64, material: Arc<dyn Material>) -> HitRecord {
+    pub fn new(p: Point3, normal: Vec3, t: f64, material: Arc<dyn Material>) -> Self {
         HitRecord {
             p,
             normal,

@@ -6,7 +6,7 @@ use crate::sphere::Sphere;
 
 pub struct Metal {
     albedo: Color,
-    fuzz: f64
+    fuzz: f64,
 }
 
 impl Metal {

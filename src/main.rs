@@ -1,15 +1,17 @@
+use std::sync::Arc;
+
 use crate::camera::Camera;
 use crate::color::write_color;
 use crate::hittable::{HitRecord, Hittable};
 use crate::hittable_list::*;
+use crate::lambertian::Lambertian;
+use crate::material::Material;
+use crate::metal::Metal;
 use crate::ray::*;
 use crate::sphere::Sphere;
 use crate::util::random;
 use crate::vec3::*;
-use crate::material::Material;
-use crate::lambertian::Lambertian;
-use std::sync::Arc;
-use crate::metal::Metal;
+use crate::dielectric::Dielectric;
 
 mod vec3;
 mod ray;
@@ -22,6 +24,7 @@ mod color;
 mod material;
 mod lambertian;
 mod metal;
+mod dielectric;
 
 fn ray_color(r: &Ray, world: &dyn Hittable, depth: i32) -> Color {
     if depth <= 0 {
@@ -29,12 +32,11 @@ fn ray_color(r: &Ray, world: &dyn Hittable, depth: i32) -> Color {
     }
 
     if let Some(rec) = world.hit(r, 0.001, f64::MAX) {
-
         return if let Some((attenuation, scattered)) = rec.material.scatter(r, &rec) {
             attenuation * ray_color(&scattered, world, depth - 1)
         } else {
             BLACK
-        }
+        };
     }
 
     let unit_direction = r.direction().unit();
@@ -55,9 +57,9 @@ fn main() {
     let mut world = HittableList::new();
 
     let material_ground = Lambertian::new(Color::new(0.8, 0.8, 0.0));
-    let material_center = Lambertian::new(Color::new(0.7, 0.3, 0.3));
-    let material_left = Metal::new(Color::new(0.8, 0.8, 0.8), 0.3);
-    let material_right = Metal::new(Color::new(0.8, 0.6, 0.2), 1.0);
+    let material_center = Lambertian::new(Color::new(0.1, 0.2, 0.5));
+    let material_left = Dielectric::new(1.5);
+    let material_right = Metal::new(Color::new(0.8, 0.6, 0.2), 0.0);
 
 
     let sphere = Sphere::new(
@@ -65,7 +67,7 @@ fn main() {
         100.0,
         Arc::new(material_ground),
     );
-    world.add(Box::new(sphere));
+    world.add(sphere);
 
 
     let sphere = Sphere::new(
@@ -73,21 +75,21 @@ fn main() {
         0.5,
         Arc::new(material_center),
     );
-    world.add(Box::new(sphere));
+    world.add(sphere);
 
     let sphere = Sphere::new(
         Point3::new(-1.0, 0.0, -1.0),
         0.5,
         Arc::new(material_left),
     );
-    world.add(Box::new(sphere));
+    world.add(sphere);
 
     let sphere = Sphere::new(
         Point3::new(1.0, 0.0, -1.0),
         0.5,
         Arc::new(material_right),
     );
-    world.add(Box::new(sphere));
+    world.add(sphere);
 
     // Camera
     let cam = Camera::new();
