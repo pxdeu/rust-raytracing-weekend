@@ -45,59 +45,80 @@ fn ray_color(r: &Ray, world: &dyn Hittable, depth: i32) -> Color {
     WHITE * (1.0 - t) + LIGHT_BLUE * t
 }
 
+fn random_scene() -> HittableList {
+    let mut world = HittableList::new();
+
+    let ground_material = Lambertian::new(Color::new(0.5, 0.5, 0.5));
+    let sphere = Sphere::new(
+        Point3::new(0.0, -1000.0, 0.0),
+        1000.0,
+        Arc::new(ground_material),
+    );
+    world.add(sphere);
+
+    let some_point = Point3::new(4.0, 0.2, 0.0);
+    for a in -11..11 {
+        for b in -11..11 {
+            let choose_mat = util::random();
+            let center = Point3::new(a as f64 + 0.9 * util::random(), 0.2, b as f64 + 0.9 * util::random());
+
+            if (center - some_point).length() > 0.9 {
+                if choose_mat < 0.8 {
+                    // diffuse
+                    let albedo = Vec3::random() * Vec3::random();
+                    let sphere_material = Lambertian::new(albedo);
+                    let sphere = Sphere::new(center, 0.2, Arc::new(sphere_material));
+                    world.add(sphere);
+                } else if choose_mat < 0.95 {
+                    // metal
+                    let albedo = Vec3::random_between(0.5, 1.0);
+                    let fuzz = util::random_between(0.0, 0.5);
+                    let sphere_material = Metal::new(albedo, fuzz);
+                    let sphere = Sphere::new(center, 0.2, Arc::new(sphere_material));
+                    world.add(sphere);
+                } else {
+                    // glass
+                    let sphere_material = Dielectric::new(1.5);
+                    let sphere = Sphere::new(center, 0.2, Arc::new(sphere_material));
+                    world.add(sphere);
+                }
+            }
+        }
+    }
+
+    let sphere_material = Dielectric::new(1.5);
+    let sphere = Sphere::new(Vec3::new(0.0, 1.0, 0.0), 1.0, Arc::new(sphere_material));
+    world.add(sphere);
+
+    let sphere_material = Lambertian::new(Color::new(0.4, 0.2, 0.1));
+    let sphere = Sphere::new(Vec3::new(-4.0, 1.0, 0.0), 1.0, Arc::new(sphere_material));
+    world.add(sphere);
+
+    let sphere_material = Metal::new(Color::new(0.7, 0.6, 0.5), 0.0);
+    let sphere = Sphere::new(Vec3::new(4.0, 1.0, 0.0), 1.0, Arc::new(sphere_material));
+    world.add(sphere);
+
+    world
+}
+
 fn main() {
 
     // Image
-    let aspect_ratio: f64 = 16.0 / 9.0;
-    let image_width: i32 = 400;
+    let aspect_ratio: f64 = 3.0 / 2.0;
+    let image_width: i32 = 1200;
     let image_height: i32 = (image_width as f64 / aspect_ratio) as i32;
-    let samples_per_pixel = 100;
+    let samples_per_pixel = 500;
     let max_depth = 50;
 
     // World
-    let mut world = HittableList::new();
-
-    let material_ground = Lambertian::new(Color::new(0.8, 0.8, 0.0));
-    let material_center = Lambertian::new(Color::new(0.1, 0.2, 0.5));
-    let material_left = Dielectric::new(1.5);
-    let material_right = Metal::new(Color::new(0.8, 0.6, 0.2), 0.0);
-
-
-    let sphere = Sphere::new(
-        Point3::new(0.0, -100.5, -1.0),
-        100.0,
-        Arc::new(material_ground),
-    );
-    world.add(sphere);
-
-
-    let sphere = Sphere::new(
-        Point3::new(0.0, 0.0, -1.0),
-        0.5,
-        Arc::new(material_center),
-    );
-    world.add(sphere);
-
-    let sphere = Sphere::new(
-        Point3::new(-1.0, 0.0, -1.0),
-        0.5,
-        Arc::new(material_left),
-    );
-    world.add(sphere);
-
-    let sphere = Sphere::new(
-        Point3::new(1.0, 0.0, -1.0),
-        0.5,
-        Arc::new(material_right),
-    );
-    world.add(sphere);
+    let world = random_scene(); //HittableList::new();
 
     // Camera
-    let lookfrom = Vec3::new(3.0, 3.0, 2.0);
-    let lookat = Vec3::new(0.0, 0.0, -1.0);
+    let lookfrom = Vec3::new(13.0, 2.0, 3.0);
+    let lookat = Vec3::new(0.0, 0.0, 0.0);
     let vup = Vec3::new(0.0, 1.0, 0.0);
-    let dist_to_focus = (lookfrom - lookat).length();
-    let aperture = 2.0;
+    let dist_to_focus =  10.0;
+    let aperture = 0.1;
 
     let cam = Camera::new(
         lookfrom,
@@ -106,7 +127,7 @@ fn main() {
         20.0,
         aspect_ratio,
         aperture,
-        dist_to_focus
+        dist_to_focus,
     );
 
     // Render
